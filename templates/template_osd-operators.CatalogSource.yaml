@@ -5,10 +5,10 @@ metadata:
   labels:
     opsrc-datastore: "true"
     opsrc-provider: redhat
-  name: osd-operators
-  namespace: openshift-operator-lifecycle-manager
+  name: #IMAGE_NAME#
+  namespace: #CATALOG_NAMESPACE#
 spec:
-  image: quay.io/openshift-sre/osd-operators:production-#SHA#
+  image: #IMAGE_REGISTRY#/#IMAGE_REPOSITORY#/#IMAGE_NAME#:#CHANNEL#-#GIT_SHA#
   displayName: OSD Operators
   icon:
     base64data: ""
