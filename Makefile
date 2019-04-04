@@ -41,12 +41,12 @@ manifests:
 
 	# create Subscription yaml (many)
 	PSN=0; while true; do \
-		OPERATOR=`cat operators.json | jq -r .[$${PSN}]`; \
+		OPERATOR=$$(cat operators.json | jq -r .[$${PSN}]); \
 		if [ "$${OPERATOR}" == "null" ]; then \
 			break; \
 		fi; \
-		OPERATOR_NAME=`echo "$$OPERATOR" | jq -r .name`; \
-		OPERATOR_NAMESPACE=`echo "$$OPERATOR" | jq -r .namespace`; \
+		OPERATOR_NAME=$$(echo "$$OPERATOR" | jq -r .name); \
+		OPERATOR_NAMESPACE=$$(echo "$$OPERATOR" | jq -r .namespace); \
 		for TYPE in Namespace OperatorGroup Subscription; do \
 			TEMPLATE=templates/template_operator.$$TYPE.yaml; \
 			DEST=manifests/$${OPERATOR_NAME}.$$TYPE.yaml; \
