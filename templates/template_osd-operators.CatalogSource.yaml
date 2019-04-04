@@ -1,7 +1,6 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
-  generation: 1
   labels:
     opsrc-datastore: "true"
     opsrc-provider: redhat

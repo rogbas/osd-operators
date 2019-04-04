@@ -21,22 +21,25 @@ default: build
 clean:
 	rm -rf manifests/
 
-.PHONY: catalogSource
-catalogSource:
+.PHONY: manifests
+manifests:
+	mkdir -p manifests/
 	# create CatalogSource yaml
-	mkdir -p manifests/
-	cp ${TEMPLATE_CS} ${DEST_CS}
-	sed -i "s/#IMAGE_REGISTRY#/${IMAGE_REGISTRY}/g" ${DEST_CS}
-	sed -i "s/#IMAGE_REPOSITORY#/${IMAGE_REPOSITORY}/g" ${DEST_CS}
-	sed -i "s/#IMAGE_NAME#/${IMAGE_NAME}/g" ${DEST_CS}
-	sed -i "s/#CATALOG_NAMESPACE#/${CATALOG_NAMESPACE}/g" ${DEST_CS}
-	sed -i "s/#CHANNEL#/${CHANNEL}/g" ${DEST_CS}
-	sed -i "s/#GIT_SHA#/${GIT_SHA}/g" ${DEST_CS}
+	for TYPE in CatalogSource; do \
+		TEMPLATE=templates/template_osd-operators.$$TYPE.yaml; \
+		DEST=manifests/osd-operators.$$TYPE.yaml; \
+		sed -e "s/#IMAGE_REGISTRY#/${IMAGE_REGISTRY}/g" \
+			-e "s/#IMAGE_REPOSITORY#/${IMAGE_REPOSITORY}/g" \
+			-e "s/#IMAGE_NAME#/${IMAGE_NAME}/g" \
+			-e "s/#CATALOG_NAMESPACE#/${CATALOG_NAMESPACE}/g" \
+			-e "s/#CHANNEL#/${CHANNEL}/g" \
+			-e "s/#GIT_SHA#/${GIT_SHA}/g" \
+			-e "s/#OPERATOR_NAME#/$${OPERATOR_NAME}/g" \
+			-e "s/#OPERATOR_NAMESPACE#/$${OPERATOR_NAMESPACE}/g" \
+			$$TEMPLATE > $$DEST; \
+	done
 
-.PHONY: operatorManifests
-operatorManifests:
 	# create Subscription yaml (many)
-	mkdir -p manifests/
 	PSN=0; while true; do \
 		OPERATOR=`cat operators.json | jq -r .[$${PSN}]`; \
 		if [ "$${OPERATOR}" == "null" ]; then \
@@ -44,25 +47,24 @@ operatorManifests:
 		fi; \
 		OPERATOR_NAME=`echo "$$OPERATOR" | jq -r .name`; \
 		OPERATOR_NAMESPACE=`echo "$$OPERATOR" | jq -r .namespace`; \
-		DEST_NS=manifests/01_$${OPERATOR_NAME}.Namespace.yaml; \
-		DEST_GRP=manifests/02_$${OPERATOR_NAME}.OperatorGroup.yaml; \
-		DEST_SUB=manifests/03_$${OPERATOR_NAME}.Subscription.yaml; \
-		cp templates/template_operator.Namespace.yaml $$DEST_NS; \
-		cp templates/template_operator.OperatorGroup.yaml $$DEST_GRP; \
-		cp templates/template_operator.Subscription.yaml $$DEST_SUB; \
-		sed -i "s/#IMAGE_REGISTRY#/${IMAGE_REGISTRY}/g" $$DEST_SUB $$DEST_GRP $$DEST_NS; \
-		sed -i "s/#IMAGE_REPOSITORY#/${IMAGE_REPOSITORY}/g" $$DEST_SUB $$DEST_GRP $$DEST_NS; \
-		sed -i "s/#IMAGE_NAME#/${IMAGE_NAME}/g" $$DEST_SUB $$DEST_GRP $$DEST_NS; \
-		sed -i "s/#CATALOG_NAMESPACE#/${CATALOG_NAMESPACE}/g" $$DEST_SUB $$DEST_GRP $$DEST_NS; \
-		sed -i "s/#CHANNEL#/${CHANNEL}/g" $$DEST_SUB $$DEST_GRP $$DEST_NS; \
-		sed -i "s/#GIT_SHA#/${GIT_SHA}/g" $$DEST_SUB $$DEST_GRP $$DEST_NS; \
-		sed -i "s/#OPERATOR_NAME#/$${OPERATOR_NAME}/g" $$DEST_SUB $$DEST_GRP $$DEST_NS; \
-		sed -i "s/#OPERATOR_NAMESPACE#/$${OPERATOR_NAMESPACE}/g" $$DEST_SUB $$DEST_GRP $$DEST_NS; \
+		for TYPE in Namespace OperatorGroup Subscription; do \
+			TEMPLATE=templates/template_operator.$$TYPE.yaml; \
+			DEST=manifests/$${OPERATOR_NAME}.$$TYPE.yaml; \
+			sed -e "s/#IMAGE_REGISTRY#/${IMAGE_REGISTRY}/g" \
+				-e "s/#IMAGE_REPOSITORY#/${IMAGE_REPOSITORY}/g" \
+				-e "s/#IMAGE_NAME#/${IMAGE_NAME}/g" \
+				-e "s/#CATALOG_NAMESPACE#/${CATALOG_NAMESPACE}/g" \
+				-e "s/#CHANNEL#/${CHANNEL}/g" \
+				-e "s/#GIT_SHA#/${GIT_SHA}/g" \
+				-e "s/#OPERATOR_NAME#/$${OPERATOR_NAME}/g" \
+				-e "s/#OPERATOR_NAMESPACE#/$${OPERATOR_NAMESPACE}/g" \
+				$$TEMPLATE > $$DEST; \
+		done; \
 		((PSN+=1)); \
 	done
 
 .PHONY: build
-build: clean catalogSource operatorManifests
+build: clean manifests
 	docker build -f ${DOCKERFILE} --tag "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CHANNEL}-${GIT_SHA}" .
 
 .PHONY: push
