@@ -71,10 +71,8 @@ submodules:
 .PHONY: bundles
 bundles:
 	for DIR in operators/**/; do \
-		pushd 2> /dev/null; \
-		eval $(make env); \
-		popd 2> /dev/null; \
-		./operators/dedicated-admin-operator/scripts/gen_operator_csv.py catalog-manifests $$OPERATOR_IMAGE; \
+		eval $$($(MAKE) -C $$DIR env | grep -v ^make); \
+		./scripts/gen_operator_csv.py $$DIR $$OPERATOR_NAME $$OPERATOR_NAMESPACE $$OPERATOR_VERSION $(IMAGE_REGISTRY)/$(IMAGE_REPOSITORY)/$$OPERATOR_NAME:v$$OPERATOR_VERSION; \
 	done
 
 .PHONY: build
