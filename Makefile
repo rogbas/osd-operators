@@ -19,7 +19,10 @@ default: build
 
 .PHONY: clean
 clean:
+	# clean generated osd-operators manifests
 	rm -rf manifests/
+	# clean submodules checkouts
+	rm -rf operators/**/
 
 .PHONY: manifests
 manifests:
@@ -69,14 +72,14 @@ submodules:
 	git submodule update
 
 .PHONY: bundles
-bundles:
+bundles: submodules
 	for DIR in operators/**/; do \
 		eval $$($(MAKE) -C $$DIR env | grep -v ^make); \
 		./scripts/gen_operator_csv.py $$DIR $$OPERATOR_NAME $$OPERATOR_NAMESPACE $$OPERATOR_VERSION $(IMAGE_REGISTRY)/$(IMAGE_REPOSITORY)/$$OPERATOR_NAME:v$$OPERATOR_VERSION; \
 	done
 
 .PHONY: build
-build: clean manifests submodules
+build: submodules manifests bundles
 	docker build -f ${DOCKERFILE} --tag "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CHANNEL}-${GIT_SHA}" .
 
 .PHONY: push
