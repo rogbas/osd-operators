@@ -41,7 +41,7 @@ manifests:
 
 	# create Subscription yaml (many)
 	PSN=0; while true; do \
-		OPERATOR=$$(cat operators.json | jq -r .[$${PSN}]); \
+		OPERATOR=$$(cat operators/metadata.json | jq -r .[$${PSN}]); \
 		if [ "$${OPERATOR}" == "null" ]; then \
 			break; \
 		fi; \
@@ -63,8 +63,22 @@ manifests:
 		((PSN+=1)); \
 	done
 
+.PHONY: submodules
+submodules:
+	git submodule init
+	git submodule update
+
+.PHONY: bundles
+bundles:
+	for DIR in operators/**/; do \
+		pushd 2> /dev/null; \
+		eval $(make env); \
+		popd 2> /dev/null; \
+		./operators/dedicated-admin-operator/scripts/gen_operator_csv.py catalog-manifests $$OPERATOR_IMAGE; \
+	done
+
 .PHONY: build
-build: clean manifests
+build: clean manifests submodules
 	docker build -f ${DOCKERFILE} --tag "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CHANNEL}-${GIT_SHA}" .
 
 .PHONY: push
