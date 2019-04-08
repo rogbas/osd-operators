@@ -30,6 +30,15 @@ if __name__ == '__main__':
     if not os.path.exists(catalog_dir):
         os.mkdir(catalog_dir)
 
+    # fail if there is a bundle for the target version already
+    version_dir = os.path.join(catalog_dir, operator_version)
+    if os.path.exists(version_dir):
+        print >> sys.stderr, "ERROR version already exists: {}".format(version_dir)
+        sys.exit(1)
+
+    # doesn't exist, create the target version
+    os.mkdir(version_dir)
+
     # update operator package
     package_filename = operator_name + ".package.yaml"
     package_file = os.path.join(catalog_dir, package_filename)
@@ -45,10 +54,6 @@ if __name__ == '__main__':
     print("Wrote Package: %s" % package_file)
 
     print("Generating CSV for version: %s" % operator_version)
-
-    version_dir = os.path.join(catalog_dir, operator_version)
-    if not os.path.exists(version_dir):
-        os.mkdir(version_dir)
 
     with open('scripts/templates/csv-template.yaml', 'r') as stream:
         csv = yaml.load(stream, Loader=yaml.FullLoader)
@@ -99,7 +104,7 @@ if __name__ == '__main__':
                     if obj['kind'] == 'Deployment' and obj['metadata']['name'] == operator_name:
                         print('Adding Deployment to CSV: {}'.format(file_path))
                         csv['spec']['install']['spec']['deployments'][0]['spec'] = obj['spec']
-                    if obj['kind'] == 'ClusterRole' or obj['kind'] == 'Role' or obj['kind'] == 'RoleBinding':
+                    if obj['kind'] == 'ClusterRole' or obj['kind'] == 'Role' or obj['kind'] == 'RoleBinding' or obj['kind'] == 'ClusterRoleBinding':
                         print('Adding {} to Catalog: {}'.format(obj['kind'], file_path))
                         shutil.copyfile(file_path, os.path.join(version_dir, file.lower()))
 

@@ -52,6 +52,10 @@ default: build
 clean:
 	# clean generated osd-operators manifests
 	rm -rf manifests/
+	# clean generated catalog
+	git clean -df catalog-manifests/
+	# revert packages
+	git checkout catalog-manifests/**/*.package.yaml
 
 .PHONY: cleantemp
 cleantemp:
@@ -100,7 +104,7 @@ manifests-operators: get-operator-source
 manifests: manifests-osd-operators manifests-operators
 
 .PHONY: get-operator-source
-get-operator-source:
+get-operator-source: 
 	pushd $(TEMP_DIR); \
 	if [ ! -e "dedicated-admin-operator" ]; then \
 		git clone -b master https://github.com/openshift/dedicated-admin-operator.git; \
