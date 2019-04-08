@@ -34,8 +34,8 @@ if __name__ == '__main__':
     # fail if there is a bundle for the target version already
     version_dir = os.path.join(catalog_dir, operator_version)
     if os.path.exists(version_dir):
-        print >> sys.stderr, "ERROR version already exists: {}".format(version_dir)
-        sys.exit(1)
+        print >> sys.stderr, "INFO version already exists, skipping: {}".format(version_dir)
+        sys.exit(0)
 
     # doesn't exist, create the target version
     os.mkdir(version_dir)
