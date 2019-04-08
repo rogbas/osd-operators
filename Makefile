@@ -124,18 +124,15 @@ get-operator-source:
 	fi; \
 	popd
 
-.PHONY: bundles
-bundles: get-operator-source
+.PHONY: catalog
+catalog: get-operator-source
 	for DIR in $(TEMP_DIR)/**/; do \
 		eval $$($(MAKE) -C $$DIR env --no-print-directory); \
 		./scripts/gen_operator_csv.py $$DIR $$OPERATOR_NAME $$OPERATOR_NAMESPACE $$OPERATOR_VERSION $(IMAGE_REGISTRY)/$(IMAGE_REPOSITORY)/$$OPERATOR_NAME:v$$OPERATOR_VERSION $(CHANNEL); \
 	done
 
 .PHONY: build
-build: isclean get-operator-source manifests bundles build-only
-
-.PHONY: build-only
-build-only:
+build: isclean get-operator-source manifests catalog
 	docker build -f ${DOCKERFILE} --tag "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CATALOG_VERSION}" .
 
 .PHONY: push
