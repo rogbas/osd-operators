@@ -137,11 +137,11 @@ build: isclean get-operator-source manifests bundles
 push:
 	docker push "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CHANNEL}-${GIT_SHA}"
 
-.PHONY: gitcommit
-gitcommit: build cleantemp
+.PHONY: git-commit
+git-commit: build cleantemp
 	git add catalog-manifests/
 	git commit -m "New catalog: $(CHANNEL)-$(GIT_SHA)" --author="OpenShift SRE <aos-sre@redhat.com>"
 
-.PHONY: gitpush
-gitpush:
+.PHONY: git-push
+git-push:
 	git push
