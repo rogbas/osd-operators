@@ -7,7 +7,7 @@ metadata:
   name: #IMAGE_NAME#
   namespace: #CATALOG_NAMESPACE#
 spec:
-  image: #IMAGE_REGISTRY#/#IMAGE_REPOSITORY#/#IMAGE_NAME#:#CHANNEL#-#GIT_SHA#
+  image: #IMAGE_REGISTRY#/#IMAGE_REPOSITORY#/#IMAGE_NAME#:#CATALOG_VERSION#
   displayName: OSD Operators
   icon:
     base64data: ""

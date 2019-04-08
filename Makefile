@@ -41,7 +41,12 @@ endif
 TEMPLATE_CS=templates/template_osd-operators.CatalogSource.yaml
 DEST_CS=manifests/00_osd-operators.CatalogSource.yaml
 
-GIT_SHA=$(shell git rev-parse HEAD | cut -c1-8)
+# Generate version and tag information from inputs
+COMMIT_NUMBER=$(shell git rev-list `git rev-list --parents HEAD | egrep "^[a-f0-9]{40}$$"`..HEAD --count)
+BUILD_DATE=$(shell date -u +%Y-%m-%d)
+CURRENT_COMMIT=$(shell git rev-parse --short=8 HEAD)
+CATALOG_VERSION=$(CHANNEL)-$(BUILD_DATE)-$(CURRENT_COMMIT)
+
 SUBSCRIPTIONS=$(shell cat subscriptions.json)
 TEMP_DIR:=$(shell mktemp -d)
 
@@ -79,7 +84,7 @@ manifests-osd-operators:
 		-e "s/#IMAGE_NAME#/${IMAGE_NAME}/g" \
 		-e "s/#CATALOG_NAMESPACE#/${CATALOG_NAMESPACE}/g" \
 		-e "s/#CHANNEL#/${CHANNEL}/g" \
-		-e "s/#GIT_SHA#/${GIT_SHA}/g" \
+		-e "s/#IMAGE_TAG_HASH#/${IMAGE_TAG_HASH}/g" \
 		-e "s/#OPERATOR_NAME#/$${OPERATOR_NAME}/g" \
 		-e "s/#OPERATOR_NAMESPACE#/$${OPERATOR_NAMESPACE}/g" \
 		$$TEMPLATE > $$DEST
@@ -100,7 +105,7 @@ manifests-operators: get-operator-source
 				-e "s/#IMAGE_NAME#/${IMAGE_NAME}/g" \
 				-e "s/#CATALOG_NAMESPACE#/${CATALOG_NAMESPACE}/g" \
 				-e "s/#CHANNEL#/${CHANNEL}/g" \
-				-e "s/#GIT_SHA#/${GIT_SHA}/g" \
+				-e "s/#CURRENT_COMMIT#/${CURRENT_COMMIT}/g" \
 				-e "s/#OPERATOR_NAME#/$${OPERATOR_NAME}/g" \
 				-e "s/#OPERATOR_NAMESPACE#/$${OPERATOR_NAMESPACE}/g" \
 				$$TEMPLATE > $$DEST; \
@@ -130,17 +135,20 @@ bundles: get-operator-source
 	done
 
 .PHONY: build
-build: isclean get-operator-source manifests bundles
-	docker build -f ${DOCKERFILE} --tag "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CHANNEL}-${GIT_SHA}" .
+build: isclean get-operator-source manifests bundles build-only
+
+.PHONY: build-only
+build-only:
+	docker build -f ${DOCKERFILE} --tag "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CATALOG_VERSION}" .
 
 .PHONY: push
 push:
-	docker push "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CHANNEL}-${GIT_SHA}"
+	docker push "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CATALOG_VERSION}"
 
 .PHONY: git-commit
 git-commit: build cleantemp
 	git add catalog-manifests/
-	git commit -m "New catalog: $(CHANNEL)-$(GIT_SHA)" --author="OpenShift SRE <aos-sre@redhat.com>"
+	git commit -m "New catalog: $(CATALOG_VERSION)" --author="OpenShift SRE <aos-sre@redhat.com>"
 
 .PHONY: git-push
 git-push:
