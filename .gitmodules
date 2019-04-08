@@ -1,3 +1,0 @@
-[submodule "operators/dedicated-admin-operator"]
-	path = operators/dedicated-admin-operator
-	url = https://github.com/openshift/dedicated-admin-operator.git

@@ -33,6 +33,7 @@ if __name__ == '__main__':
     # update operator package
     package_filename = operator_name + ".package.yaml"
     package_file = os.path.join(catalog_dir, package_filename)
+    prev_csv = "__undefined__"
     with open(package_file) as stream:
         package = yaml.load(stream, Loader=yaml.FullLoader)
         for channel in package['channels']:

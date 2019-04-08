@@ -1,6 +1,0 @@
-[
-    {
-        "name": "dedicated-admin-operator",
-        "namespace": "openshift-dedicated-admin"
-    }
-]
