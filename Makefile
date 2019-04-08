@@ -1,5 +1,46 @@
 SHELL := /usr/bin/env bash
 
+# Include project specific values file
+# Requires the following variables:
+# - CATALOG_NAMESPACE
+# - DOCKERFILE
+# - CHANNEL
+# - IMAGE_REGISTRY
+# - IMAGE_REPOSITORY
+# - IMAGE_NAME
+# - VERSION_MAJOR
+# - VERSION_MINOR
+include project.mk
+
+# Validate variables in project.mk exist
+ifndef CATALOG_NAMESPACE
+$(error CATALOG_NAMESPACE is not set; check project.mk file)
+endif
+ifndef DOCKERFILE
+$(error DOCKERFILE is not set; check project.mk file)
+endif
+ifndef CHANNEL
+$(error CHANNEL is not set; check project.mk file)
+endif
+ifndef IMAGE_REGISTRY
+$(error IMAGE_REGISTRY is not set; check project.mk file)
+endif
+ifndef IMAGE_REPOSITORY
+$(error IMAGE_REPOSITORY is not set; check project.mk file)
+endif
+ifndef IMAGE_NAME
+$(error IMAGE_NAME is not set; check project.mk file)
+endif
+ifndef VERSION_MAJOR
+$(error VERSION_MAJOR is not set; check project.mk file)
+endif
+ifndef VERSION_MINOR
+$(error VERSION_MINOR is not set; check project.mk file)
+endif
+
+TEMPLATE_CS=templates/template_osd-operators.CatalogSource.yaml
+DEST_CS=manifests/00_osd-operators.CatalogSource.yaml
+
 GIT_SHA=$(shell git rev-parse HEAD | cut -c1-8)
 SUBSCRIPTIONS=$(shell cat subscriptions.json)
 TEMP_DIR:=$(shell mktemp -d)
@@ -11,6 +52,10 @@ default: build
 clean:
 	# clean generated osd-operators manifests
 	rm -rf manifests/
+
+.PHONY: cleantemp
+cleantemp:
+	rm -rf $(TEMP_DIR)
 
 .PHONY: manifests-osd-operators
 manifests-osd-operators:

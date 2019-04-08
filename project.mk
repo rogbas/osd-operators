@@ -1,10 +1,7 @@
 # Project specific values
 CATALOG_NAMESPACE?=openshift-operator-lifecycle-manager
 DOCKERFILE?=./Dockerfile
-CHANNEL?=$(git rev-parse --abbrev-ref HEAD)
-
-TEMPLATE_CS=templates/template_osd-operators.CatalogSource.yaml
-DEST_CS=manifests/00_osd-operators.CatalogSource.yaml
+CHANNEL?=$(shell git rev-parse --abbrev-ref HEAD 2>&1)
 
 # Image specific values
 IMAGE_REGISTRY?=quay.io
