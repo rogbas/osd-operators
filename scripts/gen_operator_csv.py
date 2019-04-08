@@ -14,8 +14,8 @@ import subprocess
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 6:
-        print("USAGE: %s OPERATOR_DIR OPERATOR_NAME OPERATOR_NAMESPACE OPERATOR_VERSION OPERATOR_IMAGE" % sys.argv[0])
+    if len(sys.argv) != 7:
+        print("USAGE: %s OPERATOR_DIR OPERATOR_NAME OPERATOR_NAMESPACE OPERATOR_VERSION OPERATOR_IMAGE CHANNEL_NAME" % sys.argv[0])
         sys.exit(1)
 
     operator_dir = sys.argv[1]
@@ -23,6 +23,7 @@ if __name__ == '__main__':
     operator_namespace = sys.argv[3]
     operator_version = sys.argv[4]
     operator_image = sys.argv[5]
+    channel_name = sys.argv[6]
 
     catalog_dir = os.path.join("catalog-manifests", operator_name)
     opeartor_assets_dir = os.path.join(operator_dir, "manifests")
@@ -43,12 +44,17 @@ if __name__ == '__main__':
     package_filename = operator_name + ".package.yaml"
     package_file = os.path.join(catalog_dir, package_filename)
     prev_csv = "__undefined__"
+    if os.path.isfile(package_file):
+        with open(package_file) as stream:
+            yaml_file = yaml.safe_load_all(stream)
+            for obj in yaml_file:
+                prev_csv = obj['channels'][0]['currentCSV']
 
     # create package content
     package = {}
     package['packageName'] = operator_name
     package['channels'] = []
-    package['channels'].append({'currentCSV': operator_version, 'name': channel})
+    package['channels'].append({'currentCSV': "%s.v%s" % (operator_name, operator_version), 'name': channel_name})
 
     with open(package_file, 'w') as outfile:
         yaml.dump(package, outfile, default_flow_style=False)
@@ -116,7 +122,7 @@ if __name__ == '__main__':
     # Update the versions to include git hash:
     csv['metadata']['name'] = "%s.v%s" % (operator_name, operator_version)
     csv['spec']['version'] = operator_version
-    if prev_csv != "__undefined__" and prev_csv != operator_version:
+    if prev_csv != "__undefined__":
         csv['spec']['replaces'] = prev_csv
 
     # Set the CSV createdAt annotation:

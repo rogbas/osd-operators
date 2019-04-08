@@ -126,7 +126,7 @@ get-operator-source:
 bundles: get-operator-source
 	for DIR in $(TEMP_DIR)/**/; do \
 		eval $$($(MAKE) -C $$DIR env --no-print-directory); \
-		./scripts/gen_operator_csv.py $$DIR $$OPERATOR_NAME $$OPERATOR_NAMESPACE $$OPERATOR_VERSION $(IMAGE_REGISTRY)/$(IMAGE_REPOSITORY)/$$OPERATOR_NAME:v$$OPERATOR_VERSION; \
+		./scripts/gen_operator_csv.py $$DIR $$OPERATOR_NAME $$OPERATOR_NAMESPACE $$OPERATOR_VERSION $(IMAGE_REGISTRY)/$(IMAGE_REPOSITORY)/$$OPERATOR_NAME:v$$OPERATOR_VERSION $(CHANNEL); \
 	done
 
 .PHONY: build
