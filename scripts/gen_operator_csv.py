@@ -43,14 +43,16 @@ if __name__ == '__main__':
     package_filename = operator_name + ".package.yaml"
     package_file = os.path.join(catalog_dir, package_filename)
     prev_csv = "__undefined__"
-    with open(package_file) as stream:
-        package = yaml.load(stream, Loader=yaml.FullLoader)
-        for channel in package['channels']:
-            prev_csv = channel['currentCSV']
-            package['channels'][0]['currentCSV'] = operator_name + ".v" + operator_version
+
+    # create package content
+    package = {}
+    package['packageName'] = operator_name
+    package['channels'] = []
+    package['channels'].append({'currentCSV': operator_version, 'name': channel})
 
     with open(package_file, 'w') as outfile:
         yaml.dump(package, outfile, default_flow_style=False)
+
     print("Wrote Package: %s" % package_file)
 
     print("Generating CSV for version: %s" % operator_version)
