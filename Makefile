@@ -45,6 +45,8 @@ GIT_SHA=$(shell git rev-parse HEAD | cut -c1-8)
 SUBSCRIPTIONS=$(shell cat subscriptions.json)
 TEMP_DIR:=$(shell mktemp -d)
 
+ALLOW_DIRTY_CHECKOUT?=false
+
 .PHONY: default
 default: build
 
@@ -60,6 +62,11 @@ clean:
 .PHONY: cleantemp
 cleantemp:
 	rm -rf $(TEMP_DIR)
+
+.PHONY: isclean
+.SILENT: isclean
+isclean:
+	(test "$(ALLOW_DIRTY_CHECKOUT)" != "false" || test 0 -eq $$(git status --porcelain | wc -l)) || (echo "Local git checkout is not clean, commit changes and try again." && exit 1)
 
 .PHONY: manifests-osd-operators
 manifests-osd-operators:
@@ -123,7 +130,7 @@ bundles: get-operator-source
 	done
 
 .PHONY: build
-build: get-operator-source manifests bundles
+build: isclean get-operator-source manifests bundles
 	docker build -f ${DOCKERFILE} --tag "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CHANNEL}-${GIT_SHA}" .
 
 .PHONY: push
