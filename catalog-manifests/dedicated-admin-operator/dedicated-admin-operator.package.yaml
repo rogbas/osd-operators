@@ -1,4 +1,4 @@
 channels:
-- currentCSV: dedicated-admin-operator.v0.1.67-2019-04-08-091172db
+- currentCSV: dedicated-admin-operator.v0.1.68-2019-04-09-ce7c4eaf
   name: generalize-builds
 packageName: dedicated-admin-operator
