@@ -48,9 +48,9 @@ CURRENT_COMMIT=$(shell git rev-parse --short=8 HEAD)
 CATALOG_VERSION=$(CHANNEL)-$(BUILD_DATE)-$(CURRENT_COMMIT)
 
 SUBSCRIPTIONS=$(shell cat subscriptions.json)
-TEMP_DIR:=$(shell mktemp -d)
 
 ALLOW_DIRTY_CHECKOUT?=false
+SOURCE_DIR=operators
 
 .PHONY: default
 default: build
@@ -59,14 +59,12 @@ default: build
 clean:
 	# clean generated osd-operators manifests
 	rm -rf manifests/
+	# clean checked out operator source
+	rm -rf $(SOURCE_DIR)/
 	# clean generated catalog
 	git clean -df catalog-manifests/
 	# revert packages
 	git checkout catalog-manifests/**/*.package.yaml
-
-.PHONY: cleantemp
-cleantemp:
-	rm -rf $(TEMP_DIR)
 
 .PHONY: isclean
 .SILENT: isclean
@@ -95,10 +93,10 @@ manifests-osd-operators:
 	$(SED_CMD) $$TEMPLATE > $$DEST
 
 .PHONY: manifests-operators
-manifests-operators: get-operator-source
+manifests-operators: operator-source
 	mkdir -p manifests/
 	# create yaml per operator
-	for DIR in $(TEMP_DIR)/**/; do \
+	for DIR in $(SOURCE_DIR)/**/; do \
 		pushd $$DIR; \
 		eval $$($(MAKE) -C $$DIR env --no-print-directory); \
 		popd; \
@@ -112,9 +110,10 @@ manifests-operators: get-operator-source
 .PHONY: manifests
 manifests: manifests-osd-operators manifests-operators
 
-.PHONY: get-operator-source
-get-operator-source: 
-	pushd $(TEMP_DIR); \
+.PHONY: $(SOURCE_DIR)/dedicated-admin-operator
+$(SOURCE_DIR)/dedicated-admin-operator:
+	mkdir -p $(SOURCE_DIR)
+	pushd $(SOURCE_DIR); \
 	if [ ! -e "dedicated-admin-operator" ]; then \
 		git clone -b master https://github.com/openshift/dedicated-admin-operator.git; \
 	else \
@@ -124,15 +123,21 @@ get-operator-source:
 	fi; \
 	popd
 
+.PHONY: operator-source
+operator-source: $(SOURCE_DIR)/dedicated-admin-operator
+
 .PHONY: catalog
-catalog: get-operator-source
-	for DIR in $(TEMP_DIR)/**/; do \
+catalog: operator-source
+	for DIR in $(SOURCE_DIR)/**/; do \
 		eval $$($(MAKE) -C $$DIR env --no-print-directory); \
 		./scripts/gen_operator_csv.py $$DIR $$OPERATOR_NAME $$OPERATOR_NAMESPACE $$OPERATOR_VERSION $(IMAGE_REGISTRY)/$(IMAGE_REPOSITORY)/$$OPERATOR_NAME:v$$OPERATOR_VERSION $(CHANNEL); \
 	done
 
 .PHONY: build
-build: isclean get-operator-source manifests catalog
+build: isclean operator-source manifests catalog build-only
+
+.PHONY: build-only
+build-only:
 	docker build -f ${DOCKERFILE} --tag "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CATALOG_VERSION}" .
 
 .PHONY: push
@@ -140,7 +145,7 @@ push:
 	docker push "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CATALOG_VERSION}"
 
 .PHONY: git-commit
-git-commit: build cleantemp
+git-commit: build
 	git add catalog-manifests/
 	git commit -m "New catalog: $(CATALOG_VERSION)" --author="OpenShift SRE <aos-sre@redhat.com>"
 
