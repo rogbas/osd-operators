@@ -97,9 +97,7 @@ manifests-operators: operator-source
 	mkdir -p manifests/
 	# create yaml per operator
 	for DIR in $(SOURCE_DIR)/**/; do \
-		pushd $$DIR; \
 		eval $$($(MAKE) -C $$DIR env --no-print-directory); \
-		popd; \
 		for TYPE in Namespace OperatorGroup Subscription; do \
 			TEMPLATE=templates/template_operator.$$TYPE.yaml; \
 			DEST=manifests/$${OPERATOR_NAME}.$$TYPE.yaml; \
