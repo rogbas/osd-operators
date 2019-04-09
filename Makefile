@@ -143,7 +143,7 @@ push:
 	docker push "${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}/${IMAGE_NAME}:${CATALOG_VERSION}"
 
 .PHONY: git-commit
-git-commit: build
+git-commit:
 	git add catalog-manifests/
 	git commit -m "New catalog: $(CATALOG_VERSION)" --author="OpenShift SRE <aos-sre@redhat.com>"
 
