@@ -150,3 +150,7 @@ git-commit: build
 .PHONY: git-push
 git-push:
 	git push
+
+.PHONY: version
+version:
+	@echo $(CATALOG_VERSION)
